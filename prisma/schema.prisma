@@ -1,0 +1,300 @@
+// Schéma Prisma avec gestion complète du cycle de vie des données
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" 
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  userId        String         @unique
+  firstname     String
+  lastname      String
+  username      String         @unique
+  email         String         @unique
+  phone         String?
+  password      String
+  department    String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  isActive      Boolean        @default(true)
+  deletedAt     DateTime? 
+
+  refreshTokens           RefreshToken[]
+  twoFactorEnabled        Boolean        @default(true)
+  twoFactorCode           String?
+  twoFactorExpiry         DateTime?     
+  
+  
+  roles         Role[]
+  clientProfile ClientProfile? 
+  ownedProjects Project[]      
+  memberProjects MemberProject[]
+  comments      Comment[]
+  notifications Notification[]
+  activities    Activity[]
+  assignedTasks Task[]
+  documents     Document[]
+}
+
+model RefreshToken {
+  id                      String         @id @default(uuid()) @db.VarChar(36)
+  token                   String         @unique
+  expiresAt               DateTime
+  userId                  String         @db.VarChar(36)
+  user                    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt               DateTime       @default(now())
+}
+
+model ClientProfile {
+  id           String   @id @default(uuid())
+  clientTicket String   @unique
+  company      String?
+  industry     String?
+  address      String?
+  website      String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime? 
+  
+  
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String   @unique 
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?    
+  users       User[]
+  permissions Permission[]
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? 
+  roles       Role[]
+}
+
+model Project {
+  id           String         @id @default(uuid())
+  projectId    String         @unique
+  name         String
+  description  String?
+  startDate    DateTime
+  endDate      DateTime?
+  dueStart     DateTime
+  dueEnd       DateTime
+  
+  budget       Float?
+  progression  Int            @default(0)
+  isFavorite   Boolean        @default(false)
+  isArchived   Boolean        @default(false)   
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  archivedAt   DateTime?      
+  deletedAt    DateTime?      
+  
+  status       ProjectStatus   @relation(fields: [ProStatusId], references: [id])
+  ProStatusId     String
+  owner        User           @relation(fields: [ownerId], references: [id]) 
+  ownerId      String
+  timeline     Timeline       @relation(fields: [timelineId], references: [id])
+  timelineId   String
+  members      MemberProject[]
+  tasks        Task[]
+  tags         Tag[]
+  comments     Comment[]
+  documents    Document[]
+  activities   Activity[]
+}
+
+model ProjectStatus {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  color       String?
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? 
+  project       Project[]
+}
+
+model MemberProject {
+  id              String    @id @default(uuid())
+  projectRole     String
+  affectationDate DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime? 
+  user            User      @relation(fields: [userId], references: [id])
+  userId          String
+  project         Project   @relation(fields: [projectId], references: [id])
+  projectId       String
+
+  @@unique([userId, projectId])
+}
+
+model Timeline {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? 
+  projects    Project[]
+}
+
+model TaskStatus {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  color       String?
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? 
+  tasks       Task[]
+}
+
+model TaskPriority {
+  id          String   @id @default(uuid())
+  name        String   @unique             
+  description String?
+  color       String?                      
+  order       Int                         
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  tasks       Task[]
+}
+
+
+model Task {
+  id           String       @id @default(uuid())
+  taskId       String       @unique
+  title        String
+  description  String?
+  priority     TaskPriority @relation(fields: [priorityId], references: [id])
+  priorityId   String
+  startDate    DateTime?
+  endDate      DateTime?
+  dueStart     DateTime
+  dueEnd       DateTime
+  progression  Int          @default(0)
+  estimatedHours Float?
+  actualHours  Float?
+  isArchived   Boolean      @default(false)   
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  archivedAt   DateTime?    
+  deletedAt    DateTime?    
+
+  status       TaskStatus   @relation(fields: [statusId], references: [id])
+  statusId     String
+  
+  project      Project      @relation(fields: [projectId], references: [id])
+  projectId    String
+  
+  assignee     User?        @relation(fields: [assigneeId], references: [id])
+  assigneeId   String?
+  
+  parentTask   Task?        @relation("TaskDependency", fields: [parentTaskId], references: [id])
+  parentTaskId String?
+  subtasks     Task[]       @relation("TaskDependency")
+  
+  dependencies Task[]       @relation("TaskRelationship")
+  dependents   Task[]       @relation("TaskRelationship")
+  
+  tags         Tag[]
+  comments     Comment[]
+  documents    Document[]
+  activities   Activity[]
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? 
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  task      Task?     @relation(fields: [taskId], references: [id])
+  taskId    String?
+  project   Project?  @relation(fields: [projectId], references: [id])
+  projectId String?
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  title     String
+  content   String
+  dateSent  DateTime  @default(now())
+  isRead    Boolean   @default(false)
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime? 
+}
+
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  color     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? 
+  projects  Project[]
+  tasks     Task[]
+}
+
+model Document {
+  id          String    @id @default(uuid())
+  name        String
+  filePath    String
+  fileType    String
+  size        Int
+  description String?
+  isArchived  Boolean   @default(false)    
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  archivedAt  DateTime? 
+  deletedAt   DateTime? 
+  uploadedBy  User      @relation(fields: [userId], references: [id])
+  userId      String
+  project     Project?  @relation(fields: [projectId], references: [id])
+  projectId   String?
+  task        Task?     @relation(fields: [taskId], references: [id])
+  taskId      String?
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  action      String   
+  entityType  String   
+  entityId    String
+  description String
+  metadata    Json?
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  project     Project? @relation(fields: [projectId], references: [id])
+  projectId   String?
+  task        Task?    @relation(fields: [taskId], references: [id])
+  taskId      String?
+  createdAt   DateTime @default(now())
+}
