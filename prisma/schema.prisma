@@ -47,6 +47,8 @@ model User {
 
 }
 
+// Table de notation des tâches
+// Un utilisateur peut évaluer plusieurs tâches, et une tâche peut être évaluée par plusieurs utilisateurs
 model TaskReview {
   id          String   @id @default(uuid())
   reviewerId   String 
@@ -60,6 +62,9 @@ model TaskReview {
   task        Task     @relation(fields: [TaskId], references: [id])
 }
 
+// Table de gestion des départements
+// Un département peut avoir plusieurs sous-départements et un département parent
+// Un utilisateur peut appartenir à plusieurs départements
 model Department {
   id          String   @id @default(uuid())
   departmentId String?
@@ -73,6 +78,8 @@ model Department {
   users       User[]
 }
 
+// Table de gestion des jetons de rafraîchissement
+// Un utilisateur peut avoir plusieurs jetons de rafraîchissement
 model RefreshToken {
   id                      String         @id @default(uuid()) @db.VarChar(36)
   token                   String         @unique
@@ -82,6 +89,8 @@ model RefreshToken {
   createdAt               DateTime       @default(now())
 }
 
+// Table de gestion des profils clients
+// Un utilisateur peut avoir un seul profil client
 model ClientProfile {
   id           String   @id @default(uuid())
   clientTicket String   @unique
@@ -99,6 +108,8 @@ model ClientProfile {
   userId       String   @unique 
 }
 
+// Table de gestion des rôles et permissions
+// Un utilisateur peut avoir plusieurs rôles et permissions
 model Role {
   id          String       @id @default(uuid())
   name        String       @unique
@@ -110,6 +121,7 @@ model Role {
   permissions RolePermission[]
 }
 
+// Table de liaison entre les rôles et les permissions
 model RolePermission {
   id          String   @id @default(uuid())
   role        Role     @relation(fields: [roleId], references: [id])
@@ -121,6 +133,8 @@ model RolePermission {
   deletedAt   DateTime? 
 }
 
+// Table de gestion des permissions
+// Une permission peut être associée à plusieurs rôles
 model Permission {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -132,6 +146,8 @@ model Permission {
   roles       RolePermission[]
 }
 
+// Table de gestion des projets
+// Un projet peut avoir plusieurs membres, tâches, commentaires, documents, etc.
 model Project {
   id           String         @id @default(uuid())
   name         String
@@ -160,6 +176,7 @@ model Project {
  
 }
 
+// Table de liaison entre les projets et les tags
 model ProjectTag {
   id          String   @id @default(uuid())
   projectId   String
@@ -171,6 +188,8 @@ model ProjectTag {
   deletedAt   DateTime? 
 }
 
+// Table de gestion des statuts de projet
+// Un projet peut avoir plusieurs statuts
 model ProjectStatus {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -183,6 +202,8 @@ model ProjectStatus {
   projects       Project[]
 }
 
+// Table de gestion des membres de projet
+// Un membre de projet peut avoir plusieurs tâches assignées, commentaires, documents, etc.
 model ProjectMember {
   id              String    @id @default(uuid())
   isActive        Boolean @default(true)
@@ -200,6 +221,8 @@ model ProjectMember {
   @@unique([userId, projectId])
 }
 
+// Table de gestion des rôles de projet
+// Un projet peut avoir plusieurs rôles et permissions
 model ProjectRole {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -211,6 +234,8 @@ model ProjectRole {
   projectsRolePermissions       ProjectRolePermission[]
 }
 
+// Table de liaison entre les rôles de projet et les permissions
+// Un rôle de projet peut avoir plusieurs permissions
 model ProjectRolePermission {
   id          String   @id @default(uuid())
   projectRole ProjectRole @relation(fields: [projectRoleId], references: [id])
@@ -222,6 +247,9 @@ model ProjectRolePermission {
   deletedAt   DateTime?
   @@unique([projectRoleId, projectPermissionId])
 }
+
+// Table de gestion des permissions de projet
+// Une permission de projet peut être associée à plusieurs rôles de projet
 model ProjectPermission {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -233,6 +261,8 @@ model ProjectPermission {
   projectsRolePermissions     ProjectRolePermission[]
 }
 
+// Table de gestion des timelines
+// Une timeline peut avoir plusieurs tâches, statuts de tâches, etc.
 model Timeline {
   id          String    @id @default(uuid())
   name        String
@@ -247,6 +277,8 @@ model Timeline {
   projectId   String
 }
 
+// Table de gestion des statuts de tâches
+// Un statut de tâche peut être associé à plusieurs tâches
 model TaskStatus {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -263,6 +295,8 @@ model TaskStatus {
   timeline   Timeline? @relation(fields: [timelineId], references: [id])
 }
 
+// Table de gestion des statuts de tâches par défaut
+// Un statut de tâche par défaut peut être associé à plusieurs tâches
 model DefaultTaskStatus {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -276,6 +310,8 @@ model DefaultTaskStatus {
   createdByUser User?   @relation(fields: [createdBy], references: [id])
 }
 
+// Table de gestion des priorités de tâches
+// Une priorité de tâche peut être associée à plusieurs tâches
 model TaskPriority {
   id          String   @id @default(uuid())
   name        String   @unique             
@@ -290,6 +326,10 @@ model TaskPriority {
 }
 
 
+// Table de gestion des tâches
+// Une tâche peut avoir plusieurs membres assignés, commentaires, documents, etc.
+// Une tâche peut être associée à plusieurs autres tâches (dépendances, sous-tâches, etc.)
+// Une tâche peut être associée à plusieurs statuts de tâches
 model Task {
   id           String       @id @default(uuid())
   title        String
@@ -337,6 +377,8 @@ model Task {
   taskReviews      TaskReview[]
 }
 
+// Table de gestion des personnes assignées aux tâches
+// Une tâche peut avoir plusieurs personnes assignées
 model Assignee {
   id          String   @id @default(uuid())
   taskId      String
@@ -349,6 +391,8 @@ model Assignee {
 }
 
 
+// Table de gestion des commentaires
+// Un commentaire peut être associé à plusieurs tâches, projets, etc.
 model Comment {
   id        String    @id @default(uuid())
   content   String    @db.Text
@@ -363,6 +407,8 @@ model Comment {
   projectId String?
 }
 
+// Table de gestion des notifications
+// Une notification peut être associée à un seul utilisateur
 model Notification {
   id        String    @id @default(uuid())
   title     String
@@ -374,6 +420,8 @@ model Notification {
   deletedAt DateTime? 
 }
 
+// Table de gestion des tags
+// Un tag peut être associé à plusieurs projets
 model Tag {
   id        String    @id @default(uuid())
   name      String    @unique
@@ -385,6 +433,8 @@ model Tag {
   
 }
 
+// Table de gestion des documents
+// Un document peut être associé à plusieurs projets, tâches, etc.
 model Document {
   id          String    @id @default(uuid())
   name        String
