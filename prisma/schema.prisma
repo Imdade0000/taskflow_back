@@ -47,7 +47,7 @@ model User {
 
 }
 
-// Table de notation des tâches
+// Table pour la gestion de notation des tâches
 // Un utilisateur peut évaluer plusieurs tâches, et une tâche peut être évaluée par plusieurs utilisateurs
 model TaskReview {
   id          String   @id @default(uuid())
@@ -116,7 +116,8 @@ model Role {
   description String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime?    
+  deletedAt   DateTime? 
+  hasAllPermissions Boolean @default(false)   
   users       User[]
   permissions RolePermission[]
 }
