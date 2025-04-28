@@ -43,8 +43,6 @@ model User {
   documents     Document[]
   defaultTaskStatuses DefaultTaskStatus[]
   reviews TaskReview[]
-  
-
 }
 
 // Table pour la gestion de notation des tâches
@@ -173,8 +171,6 @@ model Project {
   tags         ProjectTag[]
   comments     Comment[]
   documents    Document[]
-
- 
 }
 
 // Table de liaison entre les projets et les tags
