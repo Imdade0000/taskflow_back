@@ -27,14 +27,20 @@ import { PrismaExceptionInterceptor } from './auth/interceptors/prisma-exception
 import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from './mailler/mailler.module';
 import { MailerService } from './mailler/mailler.service';
+import { ProjectService } from './project/project.service';
+import { ProjectModule } from './project/project.module';
+import { ProjectStatusModule } from './project/project-status-module';
+
+
+
 
 
 @Module({
-  imports: [ UsersModule, RolesModule, PermissionsModule,  
+  imports: [ UsersModule, RolesModule, PermissionsModule, ProjectModule, ProjectStatusModule,
     ConfigModule.forRoot({
     isGlobal: true,  
   }), AuthModule, MailerModule],
   controllers: [AppController, AuthController, PermissionsController],
-  providers: [AppService, RolesService, PrismaService, PermissionsService, ErrorInterceptor, LoggingInterceptor, /* RateLimitInterceptor,*/ RoleInterceptor, TimeoutInterceptor, TransformInterceptor, PrismaExceptionInterceptor,  IsActiveGuard, JwtAuthGuard, LocalAuthGuard, RolesGuard, TwoFactorAuthGuard, MailerService ],
+  providers: [AppService, RolesService, PrismaService, PermissionsService, ErrorInterceptor, LoggingInterceptor, ProjectService,/* RateLimitInterceptor,*/ RoleInterceptor, TimeoutInterceptor, TransformInterceptor, PrismaExceptionInterceptor,  IsActiveGuard, JwtAuthGuard, LocalAuthGuard, RolesGuard, TwoFactorAuthGuard, MailerService ],
 })
 export class AppModule {}
