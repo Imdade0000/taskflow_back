@@ -21,29 +21,31 @@ export class CreateProjectDto {
   @ApiProperty()
   @IsDateString()
   @IsNotEmpty()
-  startDate: Date;
+  startDate: string;
 
   @ApiProperty()
   @IsDateString()
   @IsNotEmpty()
-  dueStart: Date;
+  dueStart?: string | Date | null;
 
   @ApiProperty({ required: false })
   @IsDateString()
   @IsOptional()
-  endDate?: Date;
+  endDate?: string | Date | null;
 
   @ApiProperty({ required: false })
   @IsDateString()
   @IsOptional()
-  dueEnd?: Date;
+  dueEnd?: string | Date | null;
 
   @ApiProperty()
+  @IsString()
   @IsUUID()
   @IsNotEmpty()
   projectStatusId: string;
 
   @ApiProperty()
+  @IsString()
   @IsUUID()
   @IsNotEmpty()
   userId: string;

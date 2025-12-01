@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, HttpStatus, HttpCode, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Patch, Body, Param, UseGuards, HttpStatus, HttpCode, Query } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/permissions/permissions.guard';
@@ -321,6 +321,8 @@ export class RolesController {
     return await this.rolesService.addPermissionsToRole(id, rolePermissionsDto.permissionIds);
   }
 
+
+
   /**
    * Retire une permission d'un rôle
    */
@@ -487,46 +489,57 @@ export class RolesController {
   }
 
   /**
-   * Définit si un rôle a accès à toutes les permissions
-   */
-  @Put(':id/all-permissions')
-  @RequirePermissions('roles.manage_permissions')
-  @ApiOperation({
-    summary: 'Définir l\'accès à toutes les permissions',
-    description: 'Active ou désactive l\'accès automatique à toutes les permissions pour un rôle'
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Identifiant unique du rôle',
-    type: String,
-    required: true
-  })
-  @ApiBody({
-    type: SetAllPermissionsDto,
-    description: 'Valeur booléenne pour activer/désactiver l\'accès à toutes les permissions'
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Paramètre mis à jour avec succès'
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Non autorisé - Authentification requise'
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Accès interdit - Permission "roles.manage_permissions" requise'
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Rôle non trouvé'
-  })
-  async setHasAllPermissions(
-    @Param('id') id: string,
-    @Body() setAllPermissionsDto: SetAllPermissionsDto,
-  ) {
-    return await this.rolesService.setHasAllPermissions(id, setAllPermissionsDto.value);
+ * Définit si un rôle a accès à toutes les permissions
+ */
+@Patch(':id/permissions')
+@RequirePermissions('roles.manage_permissions')
+@ApiOperation({ 
+  summary: 'Définir hasAllPermissions pour un rôle',
+  description: 'Active ou désactive l\'accès automatique à toutes les permissions pour un rôle'
+})
+@ApiParam({ 
+  name: 'id', 
+  description: 'Identifiant unique du rôle',
+  type: String 
+})
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      hasAllPermissions: { 
+        type: 'boolean',
+        description: 'Valeur booléenne pour activer/désactiver l\'accès à toutes les permissions'
+      }
+    },
+    required: ['hasAllPermissions']
   }
+})
+@ApiResponse({
+  status: 200,
+  description: 'Paramètre mis à jour avec succès'
+})
+@ApiResponse({
+  status: 400,
+  description: 'Requête invalide'
+})
+@ApiResponse({
+  status: 401,
+  description: 'Non autorisé - Authentification requise'
+})
+@ApiResponse({
+  status: 403,
+  description: 'Accès interdit - Permission "roles.manage_permissions" requise'
+})
+@ApiResponse({
+  status: 404,
+  description: 'Rôle non trouvé'
+})
+async updateAllPermissionsToggle(
+  @Param('id') id: string,
+  @Body('hasAllPermissions') hasAllPermissions: boolean
+) {
+  return this.rolesService.setHasAllPermissions(id, hasAllPermissions);
+}
 
   /**
    * Assigne un rôle à un utilisateur

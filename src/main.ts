@@ -25,11 +25,13 @@ async function bootstrap() {
   });
   fs.writeFileSync('./postman-collection.json', JSON.stringify(postmanCollection));
   
-  
+   app.setGlobalPrefix('api'); // ← Préfixe global pour toutes les routes
+
   app.enableCors({
-    origin: 'http://localhost:8100',
+    origin: ['http://localhost:8100', 'http://localhost:4200'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
   
   
@@ -45,7 +47,9 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
   
  
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(3000, '0.0.0.0'); // ← force IPv4
+
+
   console.log(`L'application est lancée sur: ${await app.getUrl()}`);
 }
 

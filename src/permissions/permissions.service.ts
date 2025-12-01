@@ -133,4 +133,27 @@ export class PermissionsService {
     const userPermissions = await this.getUserPermissions(userId);
     return userPermissions.some(permission => permission.slug === permissionSlug);
   }
+
+  // permissions.service.ts
+async seedDefaultPermissions() {
+  const defaultPermissions = [
+    { slug: 'roles.list', name: 'Lister les rôles', description: 'Permission de voir la liste des rôles' },
+    { slug: 'roles.view', name: 'Voir un rôle', description: 'Permission de voir les détails d\'un rôle' },
+    { slug: 'roles.create', name: 'Créer un rôle', description: 'Permission de créer un nouveau rôle' },
+    { slug: 'roles.update', name: 'Modifier un rôle', description: 'Permission de modifier un rôle existant' },
+    { slug: 'roles.delete', name: 'Supprimer un rôle', description: 'Permission de supprimer un rôle' },
+    { slug: 'permissions.list', name: 'Lister les permissions', description: 'Permission de voir la liste des permissions' },
+    // Ajoutez d'autres permissions nécessaires
+  ];
+
+  for (const perm of defaultPermissions) {
+    await this.prisma.permission.upsert({
+      where: { slug: perm.slug },
+      create: perm,
+      update: perm
+    });
+  }
+
+  console.log('Permissions par défaut créées avec succès');
+}
 }

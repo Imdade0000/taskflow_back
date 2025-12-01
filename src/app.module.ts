@@ -30,17 +30,23 @@ import { MailerService } from './mailler/mailler.service';
 import { ProjectService } from './project/project.service';
 import { ProjectModule } from './project/project.module';
 import { ProjectStatusModule } from './project/project-status-module';
+import { TasksModule } from './tasks/tasks.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { DashboardModule } from './dashboard/dto/dashboard.module';
+import { ScheduleModule } from '@nestjs/schedule';
+
 
 
 
 
 
 @Module({
-  imports: [ UsersModule, RolesModule, PermissionsModule, ProjectModule, ProjectStatusModule,
+  imports: [ UsersModule, RolesModule, PermissionsModule, ProjectModule, ProjectStatusModule, NotificationsModule, PrismaModule, DashboardModule, ScheduleModule.forRoot(),
     ConfigModule.forRoot({
     isGlobal: true,  
-  }), AuthModule, MailerModule],
+  }), AuthModule, MailerModule, TasksModule],
   controllers: [AppController, AuthController, PermissionsController],
-  providers: [AppService, RolesService, PrismaService, PermissionsService, ErrorInterceptor, LoggingInterceptor, ProjectService,/* RateLimitInterceptor,*/ RoleInterceptor, TimeoutInterceptor, TransformInterceptor, PrismaExceptionInterceptor,  IsActiveGuard, JwtAuthGuard, LocalAuthGuard, RolesGuard, TwoFactorAuthGuard, MailerService ],
+  providers: [AppService, RolesService, PrismaService, PermissionsService, ErrorInterceptor, LoggingInterceptor, ProjectService, AuthService,/* RateLimitInterceptor,*/ RoleInterceptor, TimeoutInterceptor, TransformInterceptor, PrismaExceptionInterceptor,  IsActiveGuard, JwtAuthGuard, LocalAuthGuard, RolesGuard, TwoFactorAuthGuard, MailerService ],
 })
 export class AppModule {}

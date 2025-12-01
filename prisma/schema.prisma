@@ -2,6 +2,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  
 }
 
 datasource db {
@@ -43,6 +44,7 @@ model User {
   documents     Document[]
   defaultTaskStatuses DefaultTaskStatus[]
   reviews TaskReview[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 // Table pour la gestion de notation des tâches
@@ -85,6 +87,21 @@ model RefreshToken {
   userId                  String         @db.VarChar(36)
   user                    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt               DateTime       @default(now())
+}
+
+
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+  @@index([token])
 }
 
 // Table de gestion des profils clients
@@ -139,6 +156,7 @@ model Permission {
   name        String   @unique
   slug        String   @unique
   description String?
+  domain      String?  // Nouveau champ pour organiser par domaine
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime? 
@@ -336,7 +354,7 @@ model Task {
   startDate    DateTime?
   endDate      DateTime?
   dueStart     DateTime
-  dueEnd       DateTime
+  dueEnd       DateTime?
   
   estimatedHours Float?
   actualHours  Float?
@@ -355,8 +373,8 @@ model Task {
   project      Project      @relation(fields: [projectId], references: [id])
   projectId    String
   
-  timeline     Timeline    @relation(fields: [timelineId], references: [id])
-  timelineId   String
+  timeline     Timeline?    @relation(fields: [timelineId], references: [id])
+  timelineId   String?
 
   assignees     Assignee[]
   
@@ -406,14 +424,27 @@ model Comment {
 
 // Table de gestion des notifications
 // Une notification peut être associée à un seul utilisateur
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  TASK_COMMENT
+  DEADLINE_REMINDER
+  PROJECT_UPDATE
+}
+
+
 model Notification {
   id        String    @id @default(uuid())
   title     String
   content   String? @db.Text
+  type      String
   isRead    Boolean   @default(false)
+  taskId    String?
   user      User      @relation(fields: [userId], references: [id])
   userId    String
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime? 
 }
 

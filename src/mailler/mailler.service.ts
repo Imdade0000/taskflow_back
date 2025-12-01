@@ -145,23 +145,33 @@ async sendTwoFactorCode(
    * @param resetToken Token de réinitialisation
    * @param name Prénom et nom de l'utilisateur
    */
-  async sendPasswordResetEmail(
-    email: string,
-    resetToken: string,
-    name: string
-  ): Promise<void> {
-    const resetUrl = `${this.configService.get<string>('APP_URL')}/reset-password?token=${resetToken}`;
-    const subject = 'Réinitialisation de votre mot de passe';
-    const html = await this.compileTemplate('password-reset', {
-      name,
-      resetUrl,
-      expiryHours: 24, 
-      appName: this.configService.get<string>('APP_NAME'),
-      currentYear: new Date().getFullYear(),
-    });
-
-    await this.sendMail(email, subject, html);
+async sendPasswordResetEmail(email: string, resetToken: string, name: string) {
+  // Vérification finale du token
+  if (!resetToken || resetToken.includes('undefined')) {
+    throw new Error('Token invalide détecté');
   }
+
+  // ✅ CORRECTION : Construire l'URL pour les liens directs depuis l'email
+  // Cette URL utilisera l'endpoint avec redirection
+  const backendUrl = this.configService.get('APP_URL') || 'http://localhost:3000';
+  const resetUrl = `${backendUrl}/api/auth/reset-link?token=${resetToken}`;
+  
+  console.log('🔍 [MAILER] URL générée pour email:', resetUrl);
+  
+  await this.sendMail(
+    email,
+    'Réinitialisation de mot de passe',
+    await this.compileTemplate('password-reset', {
+      name,
+      resetUrl, // URL qui redirigera vers le frontend
+      expiryHours: 24,
+      appName: this.configService.get('APP_NAME'),
+      currentYear: new Date().getFullYear()
+    })
+  );
+}
+
+
 
   /**
    * Envoie une notification de changement de mot de passe

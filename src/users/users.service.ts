@@ -1,3 +1,4 @@
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -29,7 +30,7 @@ async create(createUserDto: CreateUserDto) {
     roleId,
     departementId,
     createdBy,
-    twoFactorEnabled = false // Définir à false par défaut
+    twoFactorEnabled // Définir à false par défaut
   } = createUserDto;
   
   const userExists = await this.prismaService.user.findFirst({
@@ -47,7 +48,8 @@ async create(createUserDto: CreateUserDto) {
   }
   
   const hash = await bcrypt.hash(password, 10);
-  
+  console.log('twoFactorEnabled reçu dans le DTO:', twoFactorEnabled);
+
   const user = await this.prismaService.user.create({
     data: {
       email,
@@ -59,7 +61,7 @@ async create(createUserDto: CreateUserDto) {
       roleId,
       departementId,
       createdBy,
-      twoFactorEnabled: twoFactorEnabled, // Utiliser la valeur fournie ou false par défaut
+      twoFactorEnabled: twoFactorEnabled ?? true, // 👈 ici, utiliser la valeur reçue ou true par défaut
       isActive: true
     }
   });
@@ -955,4 +957,68 @@ async create(createUserDto: CreateUserDto) {
       return false;
     }
   }
+
+  /**
+ * Trouve un utilisateur par son email
+ * @param email - L'email de l'utilisateur à rechercher
+ * @returns L'utilisateur trouvé ou null
+ */
+async findByEmail(email: string) {
+  return this.prismaService.user.findFirst({
+    where: { 
+      email,
+      deletedAt: null,
+      isActive: true
+    },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      firstname: true,
+      lastname: true,
+      phone: true,
+      password: true, // On inclut le password pour les vérifications
+      isActive: true,
+      twoFactorEnabled: true,
+      twoFactorCode: true,
+      twoFactorExpiry: true,
+      roleId: true,
+      departementId: true,
+      createdAt: true,
+      updatedAt: true
+    }
+  });
+}
+
+/**
+ * Met à jour le mot de passe d'un utilisateur
+ * @param userId - L'ID de l'utilisateur
+ * @param newPassword - Le nouveau mot de passe (non hashé)
+ * @returns true si la mise à jour a réussi
+ * @throws {NotFoundException} si l'utilisateur n'existe pas
+ */
+async updatePassword(userId: string, newPassword: string): Promise<boolean> {
+  // Vérifier que l'utilisateur existe
+  const user = await this.prismaService.user.findFirst({
+    where: { 
+      id: userId,
+      deletedAt: null
+    }
+  });
+
+  if (!user) {
+    throw new NotFoundException(`Utilisateur avec l'ID ${userId} non trouvé ou supprimé`);
+  }
+
+  // Hasher le nouveau mot de passe
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Mettre à jour le mot de passe
+  await this.prismaService.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword }
+  });
+
+  return true;
+}
 }

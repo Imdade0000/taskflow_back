@@ -271,15 +271,30 @@ export class RolesService {
   }
 
   async setHasAllPermissions(roleId: string, value: boolean) {
-    const updatedRole = await this.prisma.role.update({
-      where: { id: roleId },
-      data: { hasAllPermissions: value }
-    });
-  
-    if (value === true) {
-      await this.addAllPermissionsToRole(roleId);
-    }
-  
-    return updatedRole;
+  // Mettre à jour le champ hasAllPermissions
+  const updatedRole = await this.prisma.role.update({
+    where: { id: roleId },
+    data: { hasAllPermissions: value }
+  });
+
+  // Si value est true, ajouter toutes les permissions
+  if (value === true) {
+    await this.addAllPermissionsToRole(roleId);
   }
+
+  // Retourner le rôle avec ses permissions mises à jour
+  return this.prisma.role.findUnique({
+    where: { id: roleId },
+    include: {
+      permissions: {
+        where: {
+          deletedAt: null
+        },
+        include: {
+          permission: true
+        }
+      }
+    }
+  });
+}
 }
